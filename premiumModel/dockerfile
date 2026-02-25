@@ -1,0 +1,21 @@
+# Use a lightweight Python image
+FROM python:3.9-slim
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Copy the requirements file first (optimizes Docker layer caching)
+COPY requirements.txt .
+
+# Install dependencies
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy your model file and the python script into the container
+COPY rf_model.joblib .
+COPY app.py .
+
+# Expose the port Flask is running on
+EXPOSE 5000
+
+# Use Gunicorn (production-grade server) instead of the Flask dev server
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "app:app"]

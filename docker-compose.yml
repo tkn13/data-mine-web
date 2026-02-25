@@ -1,0 +1,27 @@
+services:
+  
+  model:
+    build: ./premiummodel
+    ports:
+      - "5000:5000"          
+  
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - model
+    volumes:
+      # Mounts your local CSV folder to the container
+      - ./backend/database:/app/database
+    environment:
+      - NODE_ENV=development
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      - VITE_API_URL=http://localhost:3000
