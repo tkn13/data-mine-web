@@ -11,9 +11,9 @@ interface StepProps {
 
 interface CarResponse {
     CarId: string,
-    CarBrand: String,
-    CarModel: String,
-    CarYear: String
+    CarBrand: string,
+    CarModel: string,
+    CarYear: number
 }
 
 const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
@@ -116,8 +116,26 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                     <label className="block text-sm font-medium text-slate-700 mb-1">Car model</label>
                     <select
                         id="car-select"
+                        className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500" // Added some styling
                         value={data.CarId || ''}
-                        onChange={e => updateData({ CarId: e.target.value })}
+                        onChange={e => {
+                            const selectedId = e.target.value;
+                            // 1. Find the car object in your response array
+                            const selectedCar = response?.find(car => car.CarId === selectedId);
+
+                            if (selectedCar) {
+                                // 2. Update all relevant fields at once
+                                updateData({
+                                    CarId: selectedCar.CarId,
+                                    CarBrand: selectedCar.CarBrand,
+                                    CarModel: selectedCar.CarModel,
+                                    CarYear: selectedCar.CarYear
+                                });
+                            } else {
+                                // Clear fields if the "Please choose" option is selected
+                                updateData({ CarId: '', CarBrand: '', CarModel: '', CarYear: 0 });
+                            }
+                        }}
                     >
                         <option value="">--Please choose an option--</option>
                         {response?.map((car, index) => (
@@ -230,27 +248,89 @@ interface SummaryModelProps {
 const SummaryModel: React.FC<SummaryModelProps> = ({ data, setShowSummary, onSend }) => {
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white p-8">
-                <div>
-                    {data.Premium}
-                </div>
-                <div className="flex gap-1">
-                    <button
-                        className="mt-4 block bg-red-500 text-white px-4 py-2"
-                        onClick={() => setShowSummary(false)}>
-                        <p>Close</p>
-                    </button>
-                    <button
-                        className="mt-4 block bg-green-500 text-white px-4 py-2"
-                        onClick={onSend}>
-                        <p>Confirm</p>
-                    </button>
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
 
+                {/* Header: Focus on Premium */}
+                <div className="bg-slate-50 p-6 border-b border-slate-100 text-center">
+                    <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Premium</p>
+                    <h2 className="text-4xl font-bold text-slate-900 mt-1">
+                        ${data.Premium?.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                    </h2>
+                    <div className="mt-3">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium uppercase ${data.Status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                            }`}>
+                            {data.Status}
+                        </span>
+                    </div>
                 </div>
+
+                {/* Content: The Details */}
+                <div className="p-6 space-y-6">
+
+                    {/* Section 1: Policy Holder */}
+                    <div>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase mb-3">Policy Holder</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <p className="text-xs text-slate-500">Full Name</p>
+                                <p className="font-medium">{data.FirstName} {data.LastName}</p>
+                            </div>
+                            <div>
+                                <p className="text-xs text-slate-500">Driving Experience</p>
+                                <p className="font-medium">{data.DrivingExperience} Years</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 2: Vehicle Information */}
+                    <div className="bg-slate-50 rounded-xl p-4 border border-slate-100">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase mb-3">Vehicle Details</h3>
+                        <div className="flex justify-between items-center">
+                            <div>
+                                <p className="text-lg font-semibold text-slate-800">{data.CarBrand} {data.CarModel}</p>
+                                <p className="text-sm text-slate-500">Year: {data.CarYear} • ID: {data.CarId}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 3: Risk & History */}
+                    <div className="grid grid-cols-3 gap-2 py-2 border-t border-slate-100 pt-4">
+                        <div className="text-center">
+                            <p className="text-[10px] text-slate-500 uppercase">Claims</p>
+                            <p className="font-bold text-slate-700">{data.TotalClaim}</p>
+                        </div>
+                        <div className="text-center border-x border-slate-100">
+                            <p className="text-[10px] text-slate-500 uppercase">Claim Rate</p>
+                            <p className="font-bold text-slate-700">{data.ClaimRate}%</p>
+                        </div>
+                        <div className="text-center">
+                            <p className="text-[10px] text-slate-500 uppercase">Total Policies</p>
+                            <p className="font-bold text-slate-700">{data.TotalPolicy}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Footer: Actions */}
+                <div className="flex items-center gap-3 p-6 pt-0">
+                    <button
+                        className="flex-1 px-4 py-3 rounded-xl font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                        onClick={() => setShowSummary(false)}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        className="flex-2 px-4 py-3 rounded-xl font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]"
+                        onClick={onSend}
+                    >
+                        Confirm & Issue Policy
+                    </button>
+                </div>
+
             </div>
         </div>
     )
+
 }
 
 function NewPolicyForm() {
