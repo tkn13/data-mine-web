@@ -9,6 +9,8 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+const MODEL_SERVICE_URL = process.env.MODEL_URL || 'http://localhost:5000';
+
 app.get('/', async (req, res) => {
     res.send('<h1>Hello, Express.js Server!</h1>');
 });
@@ -46,8 +48,10 @@ app.post('/compute', async (req, res) => {
         Policies_in_force: req.body.TotalPolicy ? req.body.TotalPolicy : 0
     }
 
+    console.log(modelInput)
+
     try {
-        const response = await fetch('http://model:5000/predict', {
+        const response = await fetch(`${MODEL_SERVICE_URL}/predict`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

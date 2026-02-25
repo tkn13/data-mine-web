@@ -16,6 +16,7 @@ services:
       - ./backend/database:/app/database
     environment:
       - NODE_ENV=development
+      - MODEL_URL=http://model:5000
 
   frontend:
     build: ./frontend
