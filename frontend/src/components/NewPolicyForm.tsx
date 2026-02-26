@@ -179,7 +179,7 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                     <label className="block text-sm font-medium text-slate-700 mb-1">Car model</label>
                     <select
                         id="car-select"
-                        className="w-full rounded-md border-slate-300 shadow-sm focus:border-indigo-500" // Added some styling
+                        className="w-full p-2 rounded-md border-slate-300 shadow-sm focus:border-indigo-500" // Added some styling
                         value={data.CarId || ''}
                         onChange={e => {
                             const selectedId = e.target.value;
