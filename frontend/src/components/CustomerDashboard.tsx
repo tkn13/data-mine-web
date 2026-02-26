@@ -100,53 +100,69 @@ function CustomerDashboard() {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100">
-                            {isLoading ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">Loading policies...</td>
-                                </tr>
-                            ) : filteredPolicies?.length === 0 ? (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">No policies found.</td>
-                                </tr>
-                            ) : (
-                                filteredPolicies?.map(policy => (
-                                    <tr key={policy.id} className="hover:bg-slate-50 transition-colors group">
-                                        <td className="px-6 py-4 font-mono text-sm text-slate-700">
-                                            {policy.id}
-                                        </td>
-                                        <td className="px-6 py-4">
-                                            <div className="font-medium text-slate-900">{policy.FirstName}</div>
-                                            <div className="text-xs text-slate-500">{policy.LastName}</div>
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600">
-                                            {policy.CarBrand} {policy.CarModel}
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600">
-                                            {new Date(policy.BirthDate).toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 text-slate-600">
-                                            <p>${policy.Premium}</p>
-                                        </td>
+                       <tbody className="divide-y divide-slate-100">
+    {isLoading ? (
+        <tr>
+            <td colSpan={6} className="px-6 py-12 text-center text-slate-400">Loading policies...</td>
+        </tr>
+    ) : filteredPolicies?.length === 0 ? (
+        <tr>
+            <td colSpan={6} className="px-6 py-12 text-center text-slate-400">No policies found.</td>
+        </tr>
+    ) : (
+        filteredPolicies?.map(policy => {
+            const isExpired = policy.Status === "expired";
+            
+            return (
+                <tr 
+                    key={policy.id} 
+                    /* Conditional background: Light red/amber if expired, otherwise standard hover */
+                    className={`transition-colors group ${
+                        isExpired 
+                        ? "bg-red-50/50 hover:bg-red-100/80" 
+                        : "hover:bg-slate-50"
+                    }`}
+                >
+                    <td className="px-6 py-4 font-mono text-sm text-slate-700">
+                        {policy.id}
+                    </td>
+                    <td className="px-6 py-4">
+                        <div className="font-medium text-slate-900">{policy.FirstName}</div>
+                        <div className="text-xs text-slate-500">{policy.LastName}</div>
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                        {policy.CarBrand} {policy.CarModel}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                        {new Date(policy.BirthDate).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600">
+                        {/* Adding a bold red text if premium is for an expired policy to highlight it */}
+                        <p className={isExpired ? "text-red-700 font-semibold" : ""}>
+                            ${policy.Premium}
+                        </p>
+                    </td>
 
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                {policy.Status === "expired" && (
-                                                    <button
-                                                        onClick={() => { handleSendData(policy) }}
-                                                        className="p-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors flex items-center gap-1"
-                                                        title="Renew Policy"
-                                                    >
-                                                        <RefreshCw className="w-4 h-4" />
-                                                        <span className="text-xs font-bold">Renew</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))
+                    <td className="px-6 py-4 text-right">
+                        {/* Removed opacity-0 to make sure the button is always visible */}
+                        <div className="flex justify-end gap-2 transition-opacity">
+                            {isExpired && (
+                                <button
+                                    onClick={() => { handleSendData(policy) }}
+                                    className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1 shadow-sm"
+                                    title="Renew Policy"
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                    <span className="text-xs font-bold">Renew</span>
+                                </button>
                             )}
-                        </tbody>
+                        </div>
+                    </td>
+                </tr>
+            );
+        })
+    )}
+</tbody> 
                     </table>
                 </div>
             </div>
