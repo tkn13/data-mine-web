@@ -1,2 +1,0 @@
-id,FirstName,LastName,BirthDate,DrivingExperience,Address,CarId,CarBrand,CarModel,CarYear,TotalPolicy,TotalClaim,ClaimRate,Premium,Status,CreatedAt
-1-1299-01788-66-5,Thaksin,Chiaokon,1999-06-09T00:00:00.000Z,2,123,10,Mazda,MX-5 Miata,2022,1,1,0.1,-1,active,1772120511503
