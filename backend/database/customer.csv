@@ -1,2 +1,0 @@
-id,FirstName,LastName,BirthDate,DrivingExperience,Address,CarId,CarBrand,CarModel,TotalPolicy,TotalClaim,ClaimRate,Premium,Status,CreatedAt
-1123,Wilson,Test,2008-02-12T00:00:00.000Z,1,333/175,9,Lucid,Air,,,,-0.17455174992806965,active,1772026860008

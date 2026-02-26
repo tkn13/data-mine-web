@@ -3,86 +3,92 @@ const path = require('path');
 const { parse } = require('csv-parse/sync');
 const { stringify } = require('csv-stringify/sync');
 
-// Define the base directory relative to the project root
 const BASE_PATH = path.join(process.cwd(), 'database');
 
-/**
- * Helper to get the full path and ensure the directory exists
- */
 const getFilePath = async (fileName) => {
     const fullPath = path.join(BASE_PATH, fileName.endsWith('.csv') ? fileName : `${fileName}.csv`);
-    
-    // Ensure /database directory exists
     try {
         await fs.mkdir(BASE_PATH, { recursive: true });
-    } catch (err) {
-        // Directory already exists or couldn't be created
-    }
-    
+    } catch (err) { /* Directory exists */ }
     return fullPath;
 };
 
 const CRUD = {
     /**
-     * CREATE: Append or overwrite data to a CSV file
-     * @param {string} fileName - e.g., 'users'
-     * @param {Array<Object>} data - Array of JSON objects
+     * INTERNAL: Overwrites the entire file. 
+     * Used by update and delete to refresh the dataset.
      */
-    create: async (fileName, data) => {
+    _writeAll: async (fileName, data) => {
         const filePath = await getFilePath(fileName);
-        const csvContent = stringify([data], { header: false });
-        await fs.appendFile(filePath, csvContent);
+        const csvContent = stringify(data, { header: true });
+        await fs.writeFile(filePath, csvContent);
         return { success: true, path: filePath };
     },
 
     /**
-     * READ: Get all data from a CSV file as JSON
-     * @param {string} fileName 
+     * CREATE: Appends new data to the end of the file.
      */
+    create: async (fileName, data) => {
+        const filePath = await getFilePath(fileName);
+        const records = Array.isArray(data) ? data : [data];
+        
+        let fileExists = false;
+        try {
+            await fs.access(filePath);
+            fileExists = true;
+        } catch {
+            fileExists = false;
+        }
+
+        // Only add headers if the file is brand new
+        const csvContent = stringify(records, { 
+            header: !fileExists,
+            columns: Object.keys(records[0])
+        });
+
+        await fs.appendFile(filePath, csvContent);
+        return { success: true, path: filePath };
+    },
+
     read: async (fileName) => {
         const filePath = await getFilePath(fileName);
         try {
             const fileContent = await fs.readFile(filePath, 'utf-8');
             return parse(fileContent, {
                 columns: true,
-                skip_empty_lines: true
+                skip_empty_lines: true,
+                cast: true // Automatically converts strings to numbers/booleans where applicable
             });
         } catch (error) {
-            if (error.code === 'ENOENT') return []; // Return empty if file doesn't exist
+            if (error.code === 'ENOENT') return [];
             throw error;
         }
     },
 
     /**
-     * UPDATE: Find a record by a key and update its values
-     * @param {string} fileName 
-     * @param {string} key - The unique identifier field (e.g., 'id')
-     * @param {Object} updatedRecord - The new data (must include the key)
+     * UPDATE: Reads all, modifies the specific record, and overwrites the file.
      */
     update: async (fileName, key, updatedRecord) => {
         let data = await CRUD.read(fileName);
-        const index = data.findIndex(item => item[key] === updatedRecord[key]);
+        // Ensure comparison works by converting both to Strings
+        const index = data.findIndex(item => String(item[key]) === String(updatedRecord[key]));
 
         if (index !== -1) {
+            // Merge existing data with new updates
             data[index] = { ...data[index], ...updatedRecord };
-            await CRUD.create(fileName, data);
+            // Use _writeAll to overwrite the file with the modified array
+            await CRUD._writeAll(fileName, data);
             return true;
         }
         return false;
     },
 
-    /**
-     * DELETE: Remove a record by a key
-     * @param {string} fileName 
-     * @param {string} key 
-     * @param {any} value - The value to match for deletion
-     */
     delete: async (fileName, key, value) => {
         const data = await CRUD.read(fileName);
-        const filteredData = data.filter(item => item[key] !== String(value));
+        const filteredData = data.filter(item => String(item[key]) !== String(value));
         
         if (data.length !== filteredData.length) {
-            await CRUD.create(fileName, filteredData);
+            await CRUD._writeAll(fileName, filteredData);
             return true;
         }
         return false;

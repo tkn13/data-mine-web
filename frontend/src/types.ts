@@ -19,4 +19,5 @@ export interface Policy {
   CreateAt: Date
 
   Premium: number
+  newPremium: number
 }
