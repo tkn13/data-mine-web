@@ -22,8 +22,8 @@ services:
     build: ./frontend
     volumes:
       # Mounts your local frontend folder to the container
-      - ./frontend:/app
-      - /app/node_modules
+    - ./frontend:/app
+    - /app/node_modules
     ports:
       - "5173:5173"
     depends_on:

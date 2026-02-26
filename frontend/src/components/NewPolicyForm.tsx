@@ -184,8 +184,7 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                         onChange={e => {
                             const selectedId = e.target.value;
                             // 1. Find the car object in your response array
-                            const selectedCar = response?.find(car => car.CarId === selectedId);
-
+                            const selectedCar = response?.find(car => car.CarId == selectedId);
                             if (selectedCar) {
                                 // 2. Update all relevant fields at once
                                 updateData({
@@ -201,8 +200,8 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                         }}
                     >
                         <option value="">--Please choose an option--</option>
-                        {response?.map((car, index) => (
-                            <option key={index} value={car.CarId}>
+                        {response?.map((car) => (
+                            <option key={car.CarId} value={car.CarId}>
                                 {car.CarYear} {car.CarBrand} {car.CarModel}
                             </option>
                         ))}

@@ -48,7 +48,6 @@ app.post('/compute', async (req, res) => {
         Policies_in_force: req.body.TotalPolicy ? req.body.TotalPolicy : 0
     }
 
-    console.log(modelInput)
 
     try {
         const response = await fetch(`${MODEL_SERVICE_URL}/predict`, {
@@ -64,7 +63,6 @@ app.post('/compute', async (req, res) => {
         
         const predVal = data.prediction;
 
-        console.log(data)
         res.json({'model_predict': predVal});
 
     } catch (error) {
@@ -92,8 +90,9 @@ app.post('/commit', async (req, res) => {
         DrivingExperience: req.body.DrivingExperience,
         Address: req.body.Address,
         CarId: selectedCar.CarId,
-        CarBarnd: selectedCar.CarBrand,
+        CarBrand: selectedCar.CarBrand,
         CarModel: selectedCar.CarModel,
+        CarYear: selectedCar.CarYear,
         TotalPolicy: req.body.TotalPolicy,
         TotalClaim: req.body.TotalClaim,
         ClaimRate: req.body.ClaimRate,
@@ -105,6 +104,39 @@ app.post('/commit', async (req, res) => {
     await CRUD.create('customer', customerData);
     res.json({ 'status': 'ok' });
 });
+
+app.post('/update', async (req,res) => {
+
+    const updateData = {
+        Status: 'active',
+        Premium: req.body.newPremium
+    }
+    await CRUD.update('customer', req.body.id, updateData);
+    res.json({'status': 'ok'});
+})
+
+app.post('/updatedebug', async (req, res) => {
+    const customerData = {
+        id: req.body.id,
+        FirstName: req.body.FirstName,
+        LastName: req.body.LastName,
+        BirthDate: req.body.BirthDate,
+        DrivingExperience: req.body.DrivingExperience,
+        Address: req.body.Address,
+        CarId: req.body.CarId,
+        CarBrand: req.body.CarBrand,
+        CarModel: req.body.CarModel,
+        CarYear: req.body.CarYear,
+        TotalPolicy: req.body.TotalPolicy,
+        TotalClaim: req.body.TotalClaim,
+        ClaimRate: req.body.ClaimRate,
+        Premium: req.body.Premium,
+        Status: req.body.Status
+    };
+    await CRUD.update('customer', req.body.id, customerData);
+    res.json({'status': 'ok'});
+   
+})
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
