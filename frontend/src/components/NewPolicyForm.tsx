@@ -24,18 +24,73 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
 
     const [errors, setErrors] = useState<Record<string, string>>({});
 
+    const calculateAge = (birthDate: Date) => {
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const m = today.getMonth() - birthDate.getMonth();
+        if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+            age--;
+        }
+        return age;
+    }
+
     const validate = () => {
         const newErrors: Record<string, string> = {};
 
-        // Implement here
-        /*e.g 
-        if (!data.FirstName) {
-            newErrors.name = "First Name is require" 
+        if (!data.id) {
+            newErrors.id = "ID is require"
         }
-        */
+        else if (!/^\d-\d{4}-\d{5}-\d{2}-\d$/.test(data.id)) {
+            newErrors.id = "ID must be in the format x-xxxx-xxxxx-xx-x"
+        }
+
+        if (!data.FirstName) {
+            newErrors.FirstName = "First Name is require"
+        }
+
+        if (!data.LastName) {
+            newErrors.LastName = "Last Name is require"
+        }
+
+        if (!data.BirthDate) {
+            newErrors.BirthDate = "Birth Date is require"
+        }
+        else if (data.BirthDate instanceof Date && calculateAge(data.BirthDate) < 18) {
+            newErrors.BirthDate = "You must be at least 18 years old"
+        }
+
+        if (data.DrivingExperience === undefined) {
+            newErrors.DrivingExperience = "Driving Experience is require"
+        }
+        else if (data.DrivingExperience !== undefined && data.DrivingExperience < 0) {
+            newErrors.DrivingExperience = "Driving Experience cannot be negative"
+        }
+
+        if (!data.Address) {
+            newErrors.Address = "Address is require"
+        }
+
+        if (!data.CarModel) {
+            newErrors.CarModel = "Car Model is require"
+        }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
+    };
+
+    const formatID = (value: string) => {
+        const numbers = value.replace(/\D/g, '');
+
+        const char = numbers.substring(0, 13);
+
+        let formatted = "";
+        if (char.length > 0) formatted += char.substring(0, 1);
+        if (char.length > 1) formatted += "-" + char.substring(1, 5);
+        if (char.length > 5) formatted += "-" + char.substring(5, 10);
+        if (char.length > 10) formatted += "-" + char.substring(10, 12);
+        if (char.length > 12) formatted += "-" + char.substring(12, 13);
+
+        return formatted;
     };
 
     const handleNext = () => {
@@ -51,8 +106,8 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                         type="text"
                         className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none ${errors.name ? 'border-red-500' : 'border-slate-200'}`}
                         value={data.id || ''}
-                        onChange={e => updateData({ id: e.target.value })}
-                        placeholder="110-xxxxxx-xx"
+                        onChange={e => updateData({ id: formatID(e.target.value) })}
+                        placeholder="x-xxxx-xxxxx-xx-x"
                     />
                     {errors.id && <p className="text-xs text-red-500 mt-1">{errors.id}</p>}
                 </div>
@@ -62,8 +117,8 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                         type="text"
                         className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none ${errors.name ? 'border-red-500' : 'border-slate-200'}`}
                         value={data.FirstName || ''}
-                        onChange={e => updateData({ FirstName: e.target.value })}
-                        placeholder="John Doe"
+                        onChange={e => updateData({ FirstName: e.target.value.trim() })}
+                        placeholder="Enter your first name"
                     />
                     {errors.FirstName && <p className="text-xs text-red-500 mt-1">{errors.FirstName}</p>}
                 </div>
@@ -73,8 +128,8 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                         type="text"
                         className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none ${errors.name ? 'border-red-500' : 'border-slate-200'}`}
                         value={data.LastName || ''}
-                        onChange={e => updateData({ LastName: e.target.value })}
-                        placeholder="John Doe"
+                        onChange={e => updateData({ LastName: e.target.value.trim() })}
+                        placeholder="Enter your last name"
                     />
                     {errors.LastName && <p className="text-xs text-red-500 mt-1">{errors.LastName}</p>}
                 </div>
@@ -91,13 +146,14 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                     {errors.BirthDate && <p className="text-xs text-red-500 mt-1">{errors.BirthDate}</p>}
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Driving Experience</label>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Driving Experience (years)</label>
                     <input
                         type="number"
                         className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none ${errors.name ? 'border-red-500' : 'border-slate-200'}`}
-                        value={data.DrivingExperience || ''}
+                        value={(data.DrivingExperience === undefined) ? '' : data.DrivingExperience || 0}
+                        min={0}
+                        placeholder="Enter your year driving experience"
                         onChange={e => updateData({ DrivingExperience: e.target.valueAsNumber })}
-                        placeholder="0"
                     />
                     {errors.DrivingExperience && <p className="text-xs text-red-500 mt-1">{errors.DrivingExperience}</p>}
                 </div>
@@ -108,7 +164,7 @@ const Step1: React.FC<StepProps> = ({ data, updateData, onNext }) => {
                         className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none ${errors.name ? 'border-red-500' : 'border-slate-200'}`}
                         value={data.Address || ''}
                         onChange={e => updateData({ Address: e.target.value })}
-                        placeholder="0"
+                        placeholder="Street, House No., City, Zip Code"
                     />
                     {errors.Address && <p className="text-xs text-red-500 mt-1">{errors.Address}</p>}
                 </div>
@@ -167,11 +223,27 @@ const Step2: React.FC<StepProps> = ({ data, updateData, onNext, onBack }) => {
         const newErrors: Record<string, string> = {};
 
         // Implement here
-        /*e.g 
-        if (!data.FirstName) {
-            newErrors.name = "First Name is require" 
+        if (data.TotalPolicy === undefined) {
+            newErrors.TotalPolicy = "Total Policy in force is require"
         }
-        */
+        else if (data.TotalPolicy !== undefined && data.TotalPolicy < 0) {
+            newErrors.TotalPolicy = "Total Policy in force cannot be negative"
+        }
+
+        if (data.TotalClaim === undefined) {
+            newErrors.TotalClaim = "Total Policy Claim is require"
+        }
+        else if (data.TotalClaim !== undefined && data.TotalClaim < 0) {
+            newErrors.TotalClaim = "Total Policy Claim cannot be negative"
+        }
+
+        if (data.ClaimRate === undefined) {
+            newErrors.ClaimRate = "Calim Rate is require"
+        }
+        else if (data.ClaimRate !== undefined && (data.ClaimRate < 0 || data.ClaimRate > 1)) {
+            newErrors.ClaimRate = "Calim Rate must be between 0 and 1"
+        }
+
 
 
         setErrors(newErrors);
@@ -191,9 +263,10 @@ const Step2: React.FC<StepProps> = ({ data, updateData, onNext, onBack }) => {
                     <input
                         type="number"
                         className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none ${errors.name ? 'border-red-500' : 'border-slate-200'}`}
-                        value={data.TotalPolicy || 0}
+                        value={(data.TotalPolicy === undefined) ? '' : data.TotalPolicy || 0}
+                        min={0}
+                        placeholder="Enter your total policy in force"
                         onChange={e => updateData({ TotalPolicy: e.target.valueAsNumber })}
-                        placeholder="0"
                     />
                     {errors.TotalPolicy && <p className="text-xs text-red-500 mt-1">{errors.TotalPolicy}</p>}
                 </div>
@@ -202,11 +275,12 @@ const Step2: React.FC<StepProps> = ({ data, updateData, onNext, onBack }) => {
                     <input
                         type="number"
                         className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none ${errors.TotalClaim ? 'border-red-500' : 'border-slate-200'}`}
-                        value={data.TotalClaim || 0}
+                        value={(data.TotalClaim === undefined) ? '' : data.TotalClaim || 0}
+                        placeholder="Enter your total policy claim"
+                        min={0}
                         onChange={e => updateData({ TotalClaim: e.target.valueAsNumber })}
-                        placeholder="0"
                     />
-                    {errors.TotalClaim && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                    {errors.TotalClaim && <p className="text-xs text-red-500 mt-1">{errors.TotalClaim}</p>}
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Calim Rate</label>
@@ -214,10 +288,12 @@ const Step2: React.FC<StepProps> = ({ data, updateData, onNext, onBack }) => {
                         type="number"
                         className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none ${errors.ClaimRate ? 'border-red-500' : 'border-slate-200'}`}
                         value={data.ClaimRate || 0}
+                        min={0}
+                        step={0.1}
+                        max={1}
                         onChange={e => updateData({ ClaimRate: e.target.valueAsNumber })}
-                        placeholder="0"
                     />
-                    {errors.ClaimRate && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+                    {errors.ClaimRate && <p className="text-xs text-red-500 mt-1">{errors.ClaimRate}</p>}
                 </div>
 
             </div>
