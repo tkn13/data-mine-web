@@ -2,20 +2,27 @@ import { useState } from "react";
 import type { Policy } from "../types";
 import { RefreshCw, Search, Filter } from 'lucide-react';
 import { useFetch } from "../hook/useFetch";
+import { p } from "motion/react-client";
 
 function CustomerDashboard() {
 
     const [refreshKey, setRefreshKey] = useState(0);
     const { response, isLoading } = useFetch<Policy[]>(`http://localhost:3000/customer?reload=${refreshKey}`);
-    const forceReload = () => setRefreshKey(old => old+1)
+    const forceReload = () => setRefreshKey(old => old + 1)
 
     const [searchTerm, setSearchTerm] = useState('');
     const [renewPolicy, setRenewPolicy] = useState<Policy | null>(null);
     const [isModelLoading, setIsModelLoading] = useState(false);
+    // filter Insurance expired.
+    const [openFilter, setOpenFilter] = useState<boolean>(false);
+    const [filterExpired, setFilterExpired] = useState<'active' | 'expired' | null>('active');
+
+    const filterByName = (p: Policy) => p.FirstName.toLowerCase().includes(searchTerm.toLowerCase())
+    const filterByID = (p: Policy) => p.id.toLowerCase().includes(searchTerm.toLowerCase())
+    const filterByExpired = (p: Policy) => (!filterExpired) ? true : p.Status === filterExpired
 
     const filteredPolicies = response?.filter(p =>
-        p.FirstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.id.toLowerCase().includes(searchTerm.toLowerCase())
+        (filterByName(p) || filterByID(p)) && filterByExpired(p)
     );
 
     const handleSendData = async (data: Policy) => {
@@ -43,6 +50,11 @@ function CustomerDashboard() {
         }
     }
 
+    const handleFilterBTN = (key: 'active' | 'expired' | null) => {
+        setFilterExpired(key);
+        setOpenFilter(false);
+    }
+
     const handleRenewData = async () => {
         try {
             const response = await fetch('http://localhost:3000/update', {
@@ -60,7 +72,7 @@ function CustomerDashboard() {
         } finally {
             setRenewPolicy(null);
             forceReload();
-        } 
+        }
     }
 
     return (
@@ -81,9 +93,30 @@ function CustomerDashboard() {
                             onChange={e => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <button className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                        <Filter className="w-5 h-5 text-slate-600" />
-                    </button>
+                    <div className="relative inline-block text-left">
+                        <button
+                            className="p-2 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                            onClick={() => setOpenFilter(!openFilter)}
+                        >
+
+                            <Filter className="w-5 h-5 text-slate-600" />
+                        </button>
+                        {openFilter && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-200 rounded-lg shadow-lg z-10">
+                                <div className="py-1">
+                                    <button onClick={() => handleFilterBTN('active')} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 w-full text-left">
+                                        Active
+                                    </button>
+                                    <button onClick={() => handleFilterBTN('expired')} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 w-full text-left">
+                                        Expire
+                                    </button>
+                                    <button onClick={() => handleFilterBTN(null)} className="block px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 w-full text-left">
+                                        All
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -100,69 +133,68 @@ function CustomerDashboard() {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                             </tr>
                         </thead>
-                       <tbody className="divide-y divide-slate-100">
-    {isLoading ? (
-        <tr>
-            <td colSpan={6} className="px-6 py-12 text-center text-slate-400">Loading policies...</td>
-        </tr>
-    ) : filteredPolicies?.length === 0 ? (
-        <tr>
-            <td colSpan={6} className="px-6 py-12 text-center text-slate-400">No policies found.</td>
-        </tr>
-    ) : (
-        filteredPolicies?.map(policy => {
-            const isExpired = policy.Status === "expired";
-            
-            return (
-                <tr 
-                    key={policy.id} 
-                    /* Conditional background: Light red/amber if expired, otherwise standard hover */
-                    className={`transition-colors group ${
-                        isExpired 
-                        ? "bg-red-50/50 hover:bg-red-100/80" 
-                        : "hover:bg-slate-50"
-                    }`}
-                >
-                    <td className="px-6 py-4 font-mono text-sm text-slate-700">
-                        {policy.id}
-                    </td>
-                    <td className="px-6 py-4">
-                        <div className="font-medium text-slate-900">{policy.FirstName}</div>
-                        <div className="text-xs text-slate-500">{policy.LastName}</div>
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                        {policy.CarBrand} {policy.CarModel}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                        {new Date(policy.BirthDate).toLocaleDateString()}
-                    </td>
-                    <td className="px-6 py-4 text-slate-600">
-                        {/* Adding a bold red text if premium is for an expired policy to highlight it */}
-                        <p className={isExpired ? "text-red-700 font-semibold" : ""}>
-                            ${policy.Premium}
-                        </p>
-                    </td>
+                        <tbody className="divide-y divide-slate-100">
+                            {isLoading ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">Loading policies...</td>
+                                </tr>
+                            ) : filteredPolicies?.length === 0 ? (
+                                <tr>
+                                    <td colSpan={6} className="px-6 py-12 text-center text-slate-400">No policies found.</td>
+                                </tr>
+                            ) : (
+                                filteredPolicies?.map(policy => {
+                                    const isExpired = policy.Status === "expired";
 
-                    <td className="px-6 py-4 text-right">
-                        {/* Removed opacity-0 to make sure the button is always visible */}
-                        <div className="flex justify-end gap-2 transition-opacity">
-                            {isExpired && (
-                                <button
-                                    onClick={() => { handleSendData(policy) }}
-                                    className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1 shadow-sm"
-                                    title="Renew Policy"
-                                >
-                                    <RefreshCw className="w-4 h-4" />
-                                    <span className="text-xs font-bold">Renew</span>
-                                </button>
+                                    return (
+                                        <tr
+                                            key={policy.id}
+                                            /* Conditional background: Light red/amber if expired, otherwise standard hover */
+                                            className={`transition-colors group ${isExpired
+                                                ? "bg-red-50/50 hover:bg-red-100/80"
+                                                : "hover:bg-slate-50"
+                                                }`}
+                                        >
+                                            <td className="px-6 py-4 font-mono text-sm text-slate-700">
+                                                {policy.id}
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="font-medium text-slate-900">{policy.FirstName}</div>
+                                                <div className="text-xs text-slate-500">{policy.LastName}</div>
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600">
+                                                {policy.CarBrand} {policy.CarModel}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600">
+                                                {new Date(policy.BirthDate).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 text-slate-600">
+                                                {/* Adding a bold red text if premium is for an expired policy to highlight it */}
+                                                <p className={isExpired ? "text-red-700 font-semibold" : ""}>
+                                                    ${policy.Premium}
+                                                </p>
+                                            </td>
+
+                                            <td className="px-6 py-4 text-right">
+                                                {/* Removed opacity-0 to make sure the button is always visible */}
+                                                <div className="flex justify-end gap-2 transition-opacity">
+                                                    {isExpired && (
+                                                        <button
+                                                            onClick={() => { handleSendData(policy) }}
+                                                            className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-colors flex items-center gap-1 shadow-sm"
+                                                            title="Renew Policy"
+                                                        >
+                                                            <RefreshCw className="w-4 h-4" />
+                                                            <span className="text-xs font-bold">Renew</span>
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             )}
-                        </div>
-                    </td>
-                </tr>
-            );
-        })
-    )}
-</tbody> 
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -267,7 +299,7 @@ function CustomerDashboard() {
                                     </button>
                                     <button
                                         className="flex-2 px-4 py-3 rounded-xl font-semibold text-white bg-green-600 hover:bg-green-700 shadow-lg shadow-green-100 transition-all active:scale-[0.98]"
-                                        onClick={() => { handleRenewData()}}
+                                        onClick={() => { handleRenewData() }}
                                     >
                                         Confirm Renew
                                     </button>
