@@ -1,1 +1,2 @@
 id,FirstName,LastName,BirthDate,DrivingExperience,Address,CarId,CarBrand,CarModel,CarYear,TotalPolicy,TotalClaim,ClaimRate,Premium,Status,CreatedAt
+1-2345-78746-32-1,Sam,Smith,1994-01-13T00:00:00.000Z,2,23/65 LKB 1110,1,Toyota,Corolla,2008,1,3,0.31,664.98,active,1772948812056

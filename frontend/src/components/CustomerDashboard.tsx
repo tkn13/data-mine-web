@@ -128,7 +128,6 @@ function CustomerDashboard() {
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">ID</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Customer</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Vehicle</th>
-                                <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Expiry Date</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Premium</th>
                                 <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Actions</th>
                             </tr>
@@ -164,9 +163,6 @@ function CustomerDashboard() {
                                             </td>
                                             <td className="px-6 py-4 text-slate-600">
                                                 {policy.CarBrand} {policy.CarModel}
-                                            </td>
-                                            <td className="px-6 py-4 text-slate-600">
-                                                {new Date(policy.BirthDate).toLocaleDateString()}
                                             </td>
                                             <td className="px-6 py-4 text-slate-600">
                                                 {/* Adding a bold red text if premium is for an expired policy to highlight it */}
